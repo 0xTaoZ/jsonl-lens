@@ -1,0 +1,11 @@
+[project]
+name = "jsonl-lens"
+version = "0.1.0"
+description = "Small JSON Lines inspection CLI for logs and event files"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Haitao Zheng" }]
+
+[project.scripts]
+jsonl-lens = "jsonl_lens.cli:main"
