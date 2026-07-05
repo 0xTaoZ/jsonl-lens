@@ -16,6 +16,8 @@ Run tests:
 PYTHONPATH=src python3 -m unittest discover -s tests
 ```
 
+More examples are in [docs/usage-examples.md](docs/usage-examples.md).
+
 ## Example output
 
 ```text
