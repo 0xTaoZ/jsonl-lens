@@ -36,6 +36,14 @@ def print_report(profile: JsonlProfile) -> None:
         for field, count in profile.field_counts:
             print(f"- {field}: {count}")
 
+    if profile.field_type_counts:
+        print("\nField types")
+        for field, type_counts in profile.field_type_counts:
+            summary = ", ".join(
+                f"{type_name}={count}" for type_name, count in type_counts
+            )
+            print(f"- {field}: {summary}")
+
     if profile.issues:
         print("\nIssues")
         for issue in profile.issues[:5]:

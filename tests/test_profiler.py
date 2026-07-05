@@ -21,6 +21,21 @@ class ProfilerTest(unittest.TestCase):
         self.assertIn(("level", 2), profile.field_counts)
         self.assertIn(("trace_id", 1), profile.field_counts)
 
+    def test_profile_lines_counts_json_value_types_by_field(self):
+        lines = [
+            '{"id": 1, "ok": true, "tags": ["prod"], "meta": {"ip": "127.0.0.1"}}',
+            '{"id": "2", "ok": false, "tags": null, "meta": {}}',
+            '{"id": 3, "ok": true, "tags": ["test"], "meta": null}',
+        ]
+
+        profile = profile_lines(lines)
+        field_types = dict(profile.field_type_counts)
+
+        self.assertEqual(field_types["id"], [("number", 2), ("string", 1)])
+        self.assertEqual(field_types["ok"], [("boolean", 3)])
+        self.assertEqual(field_types["tags"], [("array", 2), ("null", 1)])
+        self.assertEqual(field_types["meta"], [("object", 2), ("null", 1)])
+
     def test_profile_lines_keeps_sample_records(self):
         lines = [
             '{"id": 1}',

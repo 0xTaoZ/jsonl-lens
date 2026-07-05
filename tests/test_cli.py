@@ -24,6 +24,8 @@ class CliTest(unittest.TestCase):
 
         self.assertIn("Valid records: 3", result.stdout)
         self.assertIn("Invalid lines: 2", result.stdout)
+        self.assertIn("Field types", result.stdout)
+        self.assertIn("- duration_ms: number=1", result.stdout)
 
 
 if __name__ == "__main__":

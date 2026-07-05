@@ -30,6 +30,17 @@ Fields
 - service: 3
 - message: 3
 - request_id: 2
+- duration_ms: 1
+- job_id: 1
+
+Field types
+- timestamp: string=3
+- level: string=3
+- service: string=3
+- message: string=3
+- request_id: string=2
+- duration_ms: number=1
+- job_id: string=1
 
 Issues
 - line 4: invalid JSON: Expecting property name enclosed in double quotes
@@ -50,4 +61,4 @@ JSONL is easy to produce, but messy files are common. A small inspection tool is
 
 - add `--fields-only` for quick schema checks
 - add `--max-issues` to control noisy files
-- show basic value type counts for each field
+- add simple warnings for mixed field types
