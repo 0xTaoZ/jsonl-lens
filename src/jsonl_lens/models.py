@@ -15,12 +15,25 @@ class JsonlIssue:
 
 
 @dataclass(frozen=True)
+class JsonlWarning:
+    field: str
+    message: str
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "field": self.field,
+            "message": self.message,
+        }
+
+
+@dataclass(frozen=True)
 class JsonlProfile:
     total_lines: int
     valid_records: int
     invalid_lines: int
     field_counts: list[tuple[str, int]]
     field_type_counts: list[tuple[str, list[tuple[str, int]]]]
+    warnings: list[JsonlWarning]
     issues: list[JsonlIssue]
     samples: list[dict[str, Any]]
 
@@ -43,6 +56,7 @@ class JsonlProfile:
                 }
                 for field, type_counts in self.field_type_counts
             ],
+            "warnings": [warning.to_dict() for warning in self.warnings],
             "issues": [issue.to_dict() for issue in self.issues],
             "samples": self.samples,
         }

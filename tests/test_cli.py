@@ -28,6 +28,28 @@ class CliTest(unittest.TestCase):
         self.assertIn("Field types", result.stdout)
         self.assertIn("- duration_ms: number=1", result.stdout)
 
+    def test_text_report_shows_mixed_type_warnings(self):
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl") as handle:
+            handle.write('{"id": 1}\n')
+            handle.write('{"id": "2"}\n')
+            handle.flush()
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "jsonl_lens",
+                    handle.name,
+                ],
+                check=True,
+                capture_output=True,
+                env={"PYTHONPATH": str(PROJECT_ROOT / "src")},
+                text=True,
+            )
+
+        self.assertIn("Warnings", result.stdout)
+        self.assertIn("- id: mixed value types: number=1, string=1", result.stdout)
+
     def test_max_issues_limits_text_report_noise(self):
         with tempfile.NamedTemporaryFile("w", suffix=".jsonl") as handle:
             handle.write("{bad one\n")

@@ -86,6 +86,11 @@ def print_report(profile: JsonlProfile, max_issues: int = 5) -> None:
         print()
         print_field_report(profile)
 
+    if profile.warnings:
+        print("\nWarnings")
+        for warning in profile.warnings:
+            print(f"- {warning.field}: {warning.message}")
+
     if profile.issues:
         print("\nIssues")
         visible_issues = profile.issues[:max_issues]

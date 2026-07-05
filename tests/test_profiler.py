@@ -35,6 +35,14 @@ class ProfilerTest(unittest.TestCase):
         self.assertEqual(field_types["ok"], [("boolean", 3)])
         self.assertEqual(field_types["tags"], [("array", 2), ("null", 1)])
         self.assertEqual(field_types["meta"], [("object", 2), ("null", 1)])
+        self.assertEqual(
+            [(warning.field, warning.message) for warning in profile.warnings],
+            [
+                ("id", "mixed value types: number=2, string=1"),
+                ("tags", "mixed value types: array=2, null=1"),
+                ("meta", "mixed value types: object=2, null=1"),
+            ],
+        )
 
     def test_profile_lines_keeps_sample_records(self):
         lines = [

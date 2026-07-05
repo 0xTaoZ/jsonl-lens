@@ -71,4 +71,5 @@ JSONL is easy to produce, but messy files are common. A small inspection tool is
 
 ## Next ideas
 
-- add simple warnings for mixed field types
+- add field include/exclude filters for focused checks
+- add nested object field summaries

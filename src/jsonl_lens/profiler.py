@@ -3,7 +3,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from .models import JsonlIssue, JsonlProfile
+from .models import JsonlIssue, JsonlProfile, JsonlWarning
 
 
 def profile_file(path: str | Path, sample_limit: int = 3) -> JsonlProfile:
@@ -42,18 +42,39 @@ def profile_lines(lines: list[str], sample_limit: int = 3) -> JsonlProfile:
             samples.append(record)
 
     field_counts = field_counter.most_common()
+    field_type_counts = [
+        (field, field_type_counters[field].most_common())
+        for field, _count in field_counts
+    ]
     return JsonlProfile(
         total_lines=len(lines),
         valid_records=valid_records,
         invalid_lines=len(issues),
         field_counts=field_counts,
-        field_type_counts=[
-            (field, field_type_counters[field].most_common())
-            for field, _count in field_counts
-        ],
+        field_type_counts=field_type_counts,
+        warnings=_mixed_type_warnings(field_type_counts),
         issues=issues,
         samples=samples,
     )
+
+
+def _mixed_type_warnings(
+    field_type_counts: list[tuple[str, list[tuple[str, int]]]]
+) -> list[JsonlWarning]:
+    warnings: list[JsonlWarning] = []
+    for field, type_counts in field_type_counts:
+        if len(type_counts) <= 1:
+            continue
+        type_summary = ", ".join(
+            f"{type_name}={count}" for type_name, count in type_counts
+        )
+        warnings.append(
+            JsonlWarning(
+                field=field,
+                message=f"mixed value types: {type_summary}",
+            )
+        )
+    return warnings
 
 
 def _json_type_name(value: Any) -> str:
