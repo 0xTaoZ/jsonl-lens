@@ -53,6 +53,12 @@ JSON output is available for scripts:
 PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --json
 ```
 
+Large files can produce a noisy issue list. Limit the text report when you only need the first few examples:
+
+```bash
+PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --max-issues 2
+```
+
 ## Why this exists
 
 JSONL is easy to produce, but messy files are common. A small inspection tool is useful before writing a parser, importing data, or sharing a sample bug report.
@@ -60,5 +66,4 @@ JSONL is easy to produce, but messy files are common. A small inspection tool is
 ## Next ideas
 
 - add `--fields-only` for quick schema checks
-- add `--max-issues` to control noisy files
 - add simple warnings for mixed field types
