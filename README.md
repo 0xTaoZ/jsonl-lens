@@ -59,11 +59,16 @@ Large files can produce a noisy issue list. Limit the text report when you only 
 PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --max-issues 2
 ```
 
+For a quick schema check, print only field counts and value types:
+
+```bash
+PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only
+```
+
 ## Why this exists
 
 JSONL is easy to produce, but messy files are common. A small inspection tool is useful before writing a parser, importing data, or sharing a sample bug report.
 
 ## Next ideas
 
-- add `--fields-only` for quick schema checks
 - add simple warnings for mixed field types

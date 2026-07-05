@@ -55,6 +55,27 @@ class CliTest(unittest.TestCase):
         self.assertNotIn("line 3: invalid JSON", result.stdout)
         self.assertIn("... 1 more issue(s)", result.stdout)
 
+    def test_fields_only_hides_issues_and_samples(self):
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "jsonl_lens",
+                str(PROJECT_ROOT / "samples" / "events.jsonl"),
+                "--fields-only",
+            ],
+            check=True,
+            capture_output=True,
+            env={"PYTHONPATH": str(PROJECT_ROOT / "src")},
+            text=True,
+        )
+
+        self.assertIn("Fields", result.stdout)
+        self.assertIn("Field types", result.stdout)
+        self.assertIn("- timestamp: 3", result.stdout)
+        self.assertNotIn("Issues", result.stdout)
+        self.assertNotIn("Samples", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()
