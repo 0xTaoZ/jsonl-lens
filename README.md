@@ -67,11 +67,16 @@ For a quick schema check, print only field counts and value types:
 PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only
 ```
 
+Focus field summaries on a few fields:
+
+```bash
+PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only --include-field level --include-field service
+```
+
 ## Why this exists
 
 JSONL is easy to produce, but messy files are common. A small inspection tool is useful before writing a parser, importing data, or sharing a sample bug report.
 
 ## Next ideas
 
-- add field include/exclude filters for focused checks
 - add nested object field summaries

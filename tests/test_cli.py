@@ -1,3 +1,4 @@
+import json
 import subprocess
 import sys
 import tempfile
@@ -97,6 +98,57 @@ class CliTest(unittest.TestCase):
         self.assertIn("- timestamp: 3", result.stdout)
         self.assertNotIn("Issues", result.stdout)
         self.assertNotIn("Samples", result.stdout)
+
+    def test_fields_only_can_include_and_exclude_fields(self):
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "jsonl_lens",
+                str(PROJECT_ROOT / "samples" / "events.jsonl"),
+                "--fields-only",
+                "--include-field",
+                "request_id",
+                "--include-field",
+                "duration_ms",
+                "--exclude-field",
+                "request_id",
+            ],
+            check=True,
+            capture_output=True,
+            env={"PYTHONPATH": str(PROJECT_ROOT / "src")},
+            text=True,
+        )
+
+        self.assertIn("- duration_ms: 1", result.stdout)
+        self.assertIn("- duration_ms: number=1", result.stdout)
+        self.assertNotIn("request_id", result.stdout)
+        self.assertNotIn("timestamp", result.stdout)
+
+    def test_json_fields_only_honors_field_filters(self):
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "jsonl_lens",
+                str(PROJECT_ROOT / "samples" / "events.jsonl"),
+                "--json",
+                "--fields-only",
+                "--include-field",
+                "level",
+            ],
+            check=True,
+            capture_output=True,
+            env={"PYTHONPATH": str(PROJECT_ROOT / "src")},
+            text=True,
+        )
+
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["field_counts"], [{"field": "level", "count": 3}])
+        self.assertEqual(
+            payload["field_type_counts"],
+            [{"field": "level", "types": [{"type": "string", "count": 3}]}],
+        )
 
 
 if __name__ == "__main__":

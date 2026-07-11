@@ -18,6 +18,14 @@ PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only
 
 This is useful before writing a parser or loading a file into another tool. The output stays focused on field names, how often they appear, and the value types seen for each field.
 
+## Focus on selected fields
+
+```bash
+PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only --include-field level --include-field service
+```
+
+Use repeated `--include-field` options when you only care about a few fields from a larger log export. Add `--exclude-field <name>` to hide noisy fields such as timestamps or request IDs from the field summary.
+
 ## Keep noisy files readable
 
 ```bash

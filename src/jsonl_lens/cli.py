@@ -27,26 +27,70 @@ def main() -> None:
         default=5,
         help="Maximum number of issues to print in the text report",
     )
+    parser.add_argument(
+        "--include-field",
+        action="append",
+        default=[],
+        help="Only show this field in field summaries; can be repeated",
+    )
+    parser.add_argument(
+        "--exclude-field",
+        action="append",
+        default=[],
+        help="Hide this field from field summaries; can be repeated",
+    )
     args = parser.parse_args()
     if args.max_issues < 0:
         parser.error("--max-issues must be 0 or greater")
 
     profile = profile_file(args.path)
     if args.json and args.fields_only:
-        print(json.dumps(field_summary_to_dict(profile), indent=2))
+        print(
+            json.dumps(
+                field_summary_to_dict(
+                    profile,
+                    include_fields=args.include_field,
+                    exclude_fields=args.exclude_field,
+                ),
+                indent=2,
+            )
+        )
     elif args.json:
         print(json.dumps(profile.to_dict(), indent=2))
     elif args.fields_only:
-        print_field_report(profile)
+        print_field_report(
+            profile,
+            include_fields=args.include_field,
+            exclude_fields=args.exclude_field,
+        )
     else:
-        print_report(profile, max_issues=args.max_issues)
+        print_report(
+            profile,
+            max_issues=args.max_issues,
+            include_fields=args.include_field,
+            exclude_fields=args.exclude_field,
+        )
 
 
-def field_summary_to_dict(profile: JsonlProfile) -> dict[str, object]:
+def field_summary_to_dict(
+    profile: JsonlProfile,
+    include_fields: list[str] | None = None,
+    exclude_fields: list[str] | None = None,
+) -> dict[str, object]:
+    field_counts = _filter_field_counts(
+        profile.field_counts,
+        include_fields=include_fields,
+        exclude_fields=exclude_fields,
+    )
+    field_type_counts = _filter_field_type_counts(
+        profile.field_type_counts,
+        include_fields=include_fields,
+        exclude_fields=exclude_fields,
+    )
     return {
         "field_counts": [
             {"field": field, "count": count}
-            for field, count in profile.field_counts
+            for field, count in field_counts
         ],
         "field_type_counts": [
             {
@@ -56,27 +100,47 @@ def field_summary_to_dict(profile: JsonlProfile) -> dict[str, object]:
                     for type_name, count in type_counts
                 ],
             }
-            for field, type_counts in profile.field_type_counts
+            for field, type_counts in field_type_counts
         ],
     }
 
 
-def print_field_report(profile: JsonlProfile) -> None:
-    if profile.field_counts:
+def print_field_report(
+    profile: JsonlProfile,
+    include_fields: list[str] | None = None,
+    exclude_fields: list[str] | None = None,
+) -> None:
+    field_counts = _filter_field_counts(
+        profile.field_counts,
+        include_fields=include_fields,
+        exclude_fields=exclude_fields,
+    )
+    field_type_counts = _filter_field_type_counts(
+        profile.field_type_counts,
+        include_fields=include_fields,
+        exclude_fields=exclude_fields,
+    )
+
+    if field_counts:
         print("Fields")
-        for field, count in profile.field_counts:
+        for field, count in field_counts:
             print(f"- {field}: {count}")
 
-    if profile.field_type_counts:
+    if field_type_counts:
         print("\nField types")
-        for field, type_counts in profile.field_type_counts:
+        for field, type_counts in field_type_counts:
             summary = ", ".join(
                 f"{type_name}={count}" for type_name, count in type_counts
             )
             print(f"- {field}: {summary}")
 
 
-def print_report(profile: JsonlProfile, max_issues: int = 5) -> None:
+def print_report(
+    profile: JsonlProfile,
+    max_issues: int = 5,
+    include_fields: list[str] | None = None,
+    exclude_fields: list[str] | None = None,
+) -> None:
     print("jsonl-lens")
     print(f"Total lines: {profile.total_lines}")
     print(f"Valid records: {profile.valid_records}")
@@ -84,7 +148,11 @@ def print_report(profile: JsonlProfile, max_issues: int = 5) -> None:
 
     if profile.field_counts or profile.field_type_counts:
         print()
-        print_field_report(profile)
+        print_field_report(
+            profile,
+            include_fields=include_fields,
+            exclude_fields=exclude_fields,
+        )
 
     if profile.warnings:
         print("\nWarnings")
@@ -104,3 +172,39 @@ def print_report(profile: JsonlProfile, max_issues: int = 5) -> None:
         print("\nSamples")
         for sample in profile.samples:
             print(json.dumps(sample, sort_keys=True))
+
+
+def _filter_field_counts(
+    field_counts: list[tuple[str, int]],
+    include_fields: list[str] | None = None,
+    exclude_fields: list[str] | None = None,
+) -> list[tuple[str, int]]:
+    return [
+        (field, count)
+        for field, count in field_counts
+        if _field_is_visible(field, include_fields, exclude_fields)
+    ]
+
+
+def _filter_field_type_counts(
+    field_type_counts: list[tuple[str, list[tuple[str, int]]]],
+    include_fields: list[str] | None = None,
+    exclude_fields: list[str] | None = None,
+) -> list[tuple[str, list[tuple[str, int]]]]:
+    return [
+        (field, type_counts)
+        for field, type_counts in field_type_counts
+        if _field_is_visible(field, include_fields, exclude_fields)
+    ]
+
+
+def _field_is_visible(
+    field: str,
+    include_fields: list[str] | None = None,
+    exclude_fields: list[str] | None = None,
+) -> bool:
+    include_set = set(include_fields or [])
+    exclude_set = set(exclude_fields or [])
+    if include_set and field not in include_set:
+        return False
+    return field not in exclude_set
