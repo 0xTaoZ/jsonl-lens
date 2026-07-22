@@ -33,6 +33,7 @@ class JsonlProfile:
     invalid_lines: int
     field_counts: list[tuple[str, int]]
     field_type_counts: list[tuple[str, list[tuple[str, int]]]]
+    field_value_counts: list[tuple[str, list[tuple[str, int]]]]
     warnings: list[JsonlWarning]
     issues: list[JsonlIssue]
     samples: list[dict[str, Any]]
@@ -55,6 +56,16 @@ class JsonlProfile:
                     ],
                 }
                 for field, type_counts in self.field_type_counts
+            ],
+            "field_value_counts": [
+                {
+                    "field": field,
+                    "values": [
+                        {"value": value, "count": count}
+                        for value, count in value_counts
+                    ],
+                }
+                for field, value_counts in self.field_value_counts
             ],
             "warnings": [warning.to_dict() for warning in self.warnings],
             "issues": [issue.to_dict() for issue in self.issues],

@@ -16,6 +16,7 @@ def profile_lines(lines: list[str], sample_limit: int = 3) -> JsonlProfile:
     issues: list[JsonlIssue] = []
     samples: list[dict[str, Any]] = []
     valid_records = 0
+    field_value_counters: dict[str, Counter[str]] = {}
 
     for index, line in enumerate(lines, start=1):
         if not line.strip():
@@ -38,6 +39,11 @@ def profile_lines(lines: list[str], sample_limit: int = 3) -> JsonlProfile:
             field_type_counters.setdefault(field, Counter()).update(
                 [_json_type_name(value)]
             )
+            scalar_value = _json_scalar_value(value)
+            if scalar_value is not None:
+                field_value_counters.setdefault(field, Counter()).update(
+                    [scalar_value]
+                )
         if len(samples) < sample_limit:
             samples.append(record)
 
@@ -46,12 +52,18 @@ def profile_lines(lines: list[str], sample_limit: int = 3) -> JsonlProfile:
         (field, field_type_counters[field].most_common())
         for field, _count in field_counts
     ]
+    field_value_counts = [
+        (field, field_value_counters[field].most_common())
+        for field, _count in field_counts
+        if field in field_value_counters
+    ]
     return JsonlProfile(
         total_lines=len(lines),
         valid_records=valid_records,
         invalid_lines=len(issues),
         field_counts=field_counts,
         field_type_counts=field_type_counts,
+        field_value_counts=field_value_counts,
         warnings=_mixed_type_warnings(field_type_counts),
         issues=issues,
         samples=samples,
@@ -91,3 +103,11 @@ def _json_type_name(value: Any) -> str:
     if isinstance(value, dict):
         return "object"
     return type(value).__name__
+
+
+def _json_scalar_value(value: Any) -> str | None:
+    if isinstance(value, (dict, list)):
+        return None
+    if isinstance(value, str):
+        return value
+    return json.dumps(value)

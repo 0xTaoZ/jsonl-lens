@@ -28,6 +28,12 @@ def main() -> None:
         help="Maximum number of issues to print in the text report",
     )
     parser.add_argument(
+        "--max-values",
+        type=int,
+        default=5,
+        help="Maximum number of common values to print per field",
+    )
+    parser.add_argument(
         "--include-field",
         action="append",
         default=[],
@@ -42,6 +48,8 @@ def main() -> None:
     args = parser.parse_args()
     if args.max_issues < 0:
         parser.error("--max-issues must be 0 or greater")
+    if args.max_values < 0:
+        parser.error("--max-values must be 0 or greater")
 
     profile = profile_file(args.path)
     if args.json and args.fields_only:
@@ -51,6 +59,7 @@ def main() -> None:
                     profile,
                     include_fields=args.include_field,
                     exclude_fields=args.exclude_field,
+                    max_values=args.max_values,
                 ),
                 indent=2,
             )
@@ -62,11 +71,13 @@ def main() -> None:
             profile,
             include_fields=args.include_field,
             exclude_fields=args.exclude_field,
+            max_values=args.max_values,
         )
     else:
         print_report(
             profile,
             max_issues=args.max_issues,
+            max_values=args.max_values,
             include_fields=args.include_field,
             exclude_fields=args.exclude_field,
         )
@@ -76,6 +87,7 @@ def field_summary_to_dict(
     profile: JsonlProfile,
     include_fields: list[str] | None = None,
     exclude_fields: list[str] | None = None,
+    max_values: int = 5,
 ) -> dict[str, object]:
     field_counts = _filter_field_counts(
         profile.field_counts,
@@ -86,6 +98,12 @@ def field_summary_to_dict(
         profile.field_type_counts,
         include_fields=include_fields,
         exclude_fields=exclude_fields,
+    )
+    field_value_counts = _filter_field_value_counts(
+        profile.field_value_counts,
+        include_fields=include_fields,
+        exclude_fields=exclude_fields,
+        max_values=max_values,
     )
     return {
         "field_counts": [
@@ -102,6 +120,16 @@ def field_summary_to_dict(
             }
             for field, type_counts in field_type_counts
         ],
+        "field_value_counts": [
+            {
+                "field": field,
+                "values": [
+                    {"value": value, "count": count}
+                    for value, count in value_counts
+                ],
+            }
+            for field, value_counts, _hidden_count in field_value_counts
+        ],
     }
 
 
@@ -109,6 +137,7 @@ def print_field_report(
     profile: JsonlProfile,
     include_fields: list[str] | None = None,
     exclude_fields: list[str] | None = None,
+    max_values: int = 5,
 ) -> None:
     field_counts = _filter_field_counts(
         profile.field_counts,
@@ -119,6 +148,12 @@ def print_field_report(
         profile.field_type_counts,
         include_fields=include_fields,
         exclude_fields=exclude_fields,
+    )
+    field_value_counts = _filter_field_value_counts(
+        profile.field_value_counts,
+        include_fields=include_fields,
+        exclude_fields=exclude_fields,
+        max_values=max_values,
     )
 
     if field_counts:
@@ -134,10 +169,21 @@ def print_field_report(
             )
             print(f"- {field}: {summary}")
 
+    if field_value_counts:
+        print("\nCommon values")
+        for field, value_counts, hidden_count in field_value_counts:
+            summary = ", ".join(
+                f"{value}={count}" for value, count in value_counts
+            )
+            print(f"- {field}: {summary}")
+            if hidden_count > 0:
+                print(f"- ... {hidden_count} more value(s) for {field}")
+
 
 def print_report(
     profile: JsonlProfile,
     max_issues: int = 5,
+    max_values: int = 5,
     include_fields: list[str] | None = None,
     exclude_fields: list[str] | None = None,
 ) -> None:
@@ -152,6 +198,7 @@ def print_report(
             profile,
             include_fields=include_fields,
             exclude_fields=exclude_fields,
+            max_values=max_values,
         )
 
     if profile.warnings:
@@ -194,6 +241,19 @@ def _filter_field_type_counts(
     return [
         (field, type_counts)
         for field, type_counts in field_type_counts
+        if _field_is_visible(field, include_fields, exclude_fields)
+    ]
+
+
+def _filter_field_value_counts(
+    field_value_counts: list[tuple[str, list[tuple[str, int]]]],
+    include_fields: list[str] | None = None,
+    exclude_fields: list[str] | None = None,
+    max_values: int = 5,
+) -> list[tuple[str, list[tuple[str, int]], int]]:
+    return [
+        (field, value_counts[:max_values], max(len(value_counts) - max_values, 0))
+        for field, value_counts in field_value_counts
         if _field_is_visible(field, include_fields, exclude_fields)
     ]
 

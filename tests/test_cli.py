@@ -125,6 +125,54 @@ class CliTest(unittest.TestCase):
         self.assertNotIn("request_id", result.stdout)
         self.assertNotIn("timestamp", result.stdout)
 
+    def test_fields_only_prints_common_scalar_values(self):
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "jsonl_lens",
+                str(PROJECT_ROOT / "samples" / "events.jsonl"),
+                "--fields-only",
+                "--include-field",
+                "level",
+            ],
+            check=True,
+            capture_output=True,
+            env={"PYTHONPATH": str(PROJECT_ROOT / "src")},
+            text=True,
+        )
+
+        self.assertIn("Common values", result.stdout)
+        self.assertIn("- level: info=1, warn=1, error=1", result.stdout)
+        self.assertNotIn("service:", result.stdout)
+
+    def test_max_values_limits_common_value_noise(self):
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl") as handle:
+            handle.write('{"id": "a"}\n')
+            handle.write('{"id": "b"}\n')
+            handle.write('{"id": "c"}\n')
+            handle.flush()
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "jsonl_lens",
+                    handle.name,
+                    "--fields-only",
+                    "--max-values",
+                    "2",
+                ],
+                check=True,
+                capture_output=True,
+                env={"PYTHONPATH": str(PROJECT_ROOT / "src")},
+                text=True,
+            )
+
+        self.assertIn("- id: a=1, b=1", result.stdout)
+        self.assertNotIn("c=1", result.stdout)
+        self.assertIn("- ... 1 more value(s) for id", result.stdout)
+
     def test_json_fields_only_honors_field_filters(self):
         result = subprocess.run(
             [
@@ -148,6 +196,19 @@ class CliTest(unittest.TestCase):
         self.assertEqual(
             payload["field_type_counts"],
             [{"field": "level", "types": [{"type": "string", "count": 3}]}],
+        )
+        self.assertEqual(
+            payload["field_value_counts"],
+            [
+                {
+                    "field": "level",
+                    "values": [
+                        {"value": "info", "count": 1},
+                        {"value": "warn", "count": 1},
+                        {"value": "error", "count": 1},
+                    ],
+                }
+            ],
         )
 
 

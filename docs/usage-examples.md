@@ -26,6 +26,20 @@ PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only --includ
 
 Use repeated `--include-field` options when you only care about a few fields from a larger log export. Add `--exclude-field <name>` to hide noisy fields such as timestamps or request IDs from the field summary.
 
+## Check common values
+
+```bash
+PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only --include-field level --include-field service
+```
+
+This shows the most common scalar values for selected fields. It is useful for quick checks such as which log levels appear, which service produced most records, or whether a status field contains unexpected values.
+
+Use `--max-values <count>` to keep high-cardinality fields readable:
+
+```bash
+PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only --include-field level --max-values 2
+```
+
 ## Keep noisy files readable
 
 ```bash

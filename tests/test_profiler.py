@@ -44,6 +44,21 @@ class ProfilerTest(unittest.TestCase):
             ],
         )
 
+    def test_profile_lines_counts_common_scalar_values_by_field(self):
+        lines = [
+            '{"level": "info", "status": 200, "ok": true, "tags": ["api"]}',
+            '{"level": "error", "status": 500, "ok": false, "tags": ["worker"]}',
+            '{"level": "info", "status": 200, "ok": true, "tags": ["api"]}',
+        ]
+
+        profile = profile_lines(lines)
+        field_values = dict(profile.field_value_counts)
+
+        self.assertEqual(field_values["level"], [("info", 2), ("error", 1)])
+        self.assertEqual(field_values["status"], [("200", 2), ("500", 1)])
+        self.assertEqual(field_values["ok"], [("true", 2), ("false", 1)])
+        self.assertNotIn("tags", field_values)
+
     def test_profile_lines_keeps_sample_records(self):
         lines = [
             '{"id": 1}',
