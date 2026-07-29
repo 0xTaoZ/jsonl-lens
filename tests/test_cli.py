@@ -146,6 +146,36 @@ class CliTest(unittest.TestCase):
         self.assertIn("- level: info=1, warn=1, error=1", result.stdout)
         self.assertNotIn("service:", result.stdout)
 
+    def test_fields_only_prints_missing_and_null_counts(self):
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl") as handle:
+            handle.write('{"user": "alice", "mfa": true, "src_ip": "198.51.100.10"}\n')
+            handle.write('{"user": "bob", "mfa": null}\n')
+            handle.write('{"user": "carol", "src_ip": "203.0.113.8"}\n')
+            handle.flush()
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "jsonl_lens",
+                    handle.name,
+                    "--fields-only",
+                    "--include-field",
+                    "mfa",
+                    "--include-field",
+                    "src_ip",
+                ],
+                check=True,
+                capture_output=True,
+                env={"PYTHONPATH": str(PROJECT_ROOT / "src")},
+                text=True,
+            )
+
+        self.assertIn("Field gaps", result.stdout)
+        self.assertIn("- mfa: missing=1, null=1", result.stdout)
+        self.assertIn("- src_ip: missing=1, null=0", result.stdout)
+        self.assertNotIn("user:", result.stdout)
+
     def test_max_values_limits_common_value_noise(self):
         with tempfile.NamedTemporaryFile("w", suffix=".jsonl") as handle:
             handle.write('{"id": "a"}\n')
@@ -209,6 +239,36 @@ class CliTest(unittest.TestCase):
                     ],
                 }
             ],
+        )
+
+    def test_json_fields_only_includes_filtered_missing_and_null_counts(self):
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl") as handle:
+            handle.write('{"event": "login", "mfa": true}\n')
+            handle.write('{"event": "login", "mfa": null}\n')
+            handle.write('{"event": "logout"}\n')
+            handle.flush()
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "jsonl_lens",
+                    handle.name,
+                    "--json",
+                    "--fields-only",
+                    "--include-field",
+                    "mfa",
+                ],
+                check=True,
+                capture_output=True,
+                env={"PYTHONPATH": str(PROJECT_ROOT / "src")},
+                text=True,
+            )
+
+        payload = json.loads(result.stdout)
+        self.assertEqual(
+            payload["field_absence_counts"],
+            [{"field": "mfa", "missing": 1, "null": 1}],
         )
 
 

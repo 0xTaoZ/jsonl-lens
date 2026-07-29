@@ -8,7 +8,7 @@ These examples use the bundled sample file, but the same commands work with smal
 PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl
 ```
 
-Use this when you want a quick human-readable report with record counts, field frequency, value types, parse issues, and a few sample records.
+Use this when you want a quick human-readable report with record counts, field frequency, value types, missing or null fields, parse issues, and a few sample records.
 
 ## Check a schema quickly
 
@@ -16,7 +16,7 @@ Use this when you want a quick human-readable report with record counts, field f
 PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only
 ```
 
-This is useful before writing a parser or loading a file into another tool. The output stays focused on field names, how often they appear, and the value types seen for each field.
+This is useful before writing a parser or loading a file into another tool. The output stays focused on field names, how often they appear, the value types seen for each field, and fields that are missing or null in some records.
 
 ## Focus on selected fields
 
@@ -39,6 +39,14 @@ Use `--max-values <count>` to keep high-cardinality fields readable:
 ```bash
 PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only --include-field level --max-values 2
 ```
+
+## Find sparse fields
+
+```bash
+PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only --include-field request_id
+```
+
+The `Field gaps` section shows how many valid records did not include the field and how many set it to `null`. This is useful when checking whether log enrichment or event collection is consistent.
 
 ## Keep noisy files readable
 

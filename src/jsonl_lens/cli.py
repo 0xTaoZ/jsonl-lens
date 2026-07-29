@@ -105,6 +105,11 @@ def field_summary_to_dict(
         exclude_fields=exclude_fields,
         max_values=max_values,
     )
+    field_absence_counts = _filter_field_absence_counts(
+        profile.field_absence_counts,
+        include_fields=include_fields,
+        exclude_fields=exclude_fields,
+    )
     return {
         "field_counts": [
             {"field": field, "count": count}
@@ -129,6 +134,10 @@ def field_summary_to_dict(
                 ],
             }
             for field, value_counts, _hidden_count in field_value_counts
+        ],
+        "field_absence_counts": [
+            {"field": field, "missing": missing, "null": null}
+            for field, missing, null in field_absence_counts
         ],
     }
 
@@ -155,6 +164,11 @@ def print_field_report(
         exclude_fields=exclude_fields,
         max_values=max_values,
     )
+    field_absence_counts = _filter_field_absence_counts(
+        profile.field_absence_counts,
+        include_fields=include_fields,
+        exclude_fields=exclude_fields,
+    )
 
     if field_counts:
         print("Fields")
@@ -178,6 +192,11 @@ def print_field_report(
             print(f"- {field}: {summary}")
             if hidden_count > 0:
                 print(f"- ... {hidden_count} more value(s) for {field}")
+
+    if field_absence_counts:
+        print("\nField gaps")
+        for field, missing, null in field_absence_counts:
+            print(f"- {field}: missing={missing}, null={null}")
 
 
 def print_report(
@@ -255,6 +274,19 @@ def _filter_field_value_counts(
         (field, value_counts[:max_values], max(len(value_counts) - max_values, 0))
         for field, value_counts in field_value_counts
         if _field_is_visible(field, include_fields, exclude_fields)
+    ]
+
+
+def _filter_field_absence_counts(
+    field_absence_counts: list[tuple[str, tuple[int, int]]],
+    include_fields: list[str] | None = None,
+    exclude_fields: list[str] | None = None,
+) -> list[tuple[str, int, int]]:
+    return [
+        (field, missing, null)
+        for field, (missing, null) in field_absence_counts
+        if (missing > 0 or null > 0)
+        and _field_is_visible(field, include_fields, exclude_fields)
     ]
 
 

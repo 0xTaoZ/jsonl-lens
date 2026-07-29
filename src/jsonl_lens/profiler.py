@@ -57,6 +57,16 @@ def profile_lines(lines: list[str], sample_limit: int = 3) -> JsonlProfile:
         for field, _count in field_counts
         if field in field_value_counters
     ]
+    field_absence_counts = [
+        (
+            field,
+            (
+                valid_records - count,
+                field_type_counters[field].get("null", 0),
+            ),
+        )
+        for field, count in field_counts
+    ]
     return JsonlProfile(
         total_lines=len(lines),
         valid_records=valid_records,
@@ -64,6 +74,7 @@ def profile_lines(lines: list[str], sample_limit: int = 3) -> JsonlProfile:
         field_counts=field_counts,
         field_type_counts=field_type_counts,
         field_value_counts=field_value_counts,
+        field_absence_counts=field_absence_counts,
         warnings=_mixed_type_warnings(field_type_counts),
         issues=issues,
         samples=samples,

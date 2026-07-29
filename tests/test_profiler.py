@@ -59,6 +59,24 @@ class ProfilerTest(unittest.TestCase):
         self.assertEqual(field_values["ok"], [("true", 2), ("false", 1)])
         self.assertNotIn("tags", field_values)
 
+    def test_profile_lines_counts_missing_and_null_fields(self):
+        lines = [
+            '{"user": "alice", "mfa": true, "src_ip": "198.51.100.10"}',
+            '{"user": "bob", "mfa": null}',
+            '{"user": "carol", "src_ip": "203.0.113.8"}',
+        ]
+
+        profile = profile_lines(lines)
+
+        self.assertEqual(
+            dict(profile.field_absence_counts),
+            {
+                "user": (0, 0),
+                "mfa": (1, 1),
+                "src_ip": (1, 0),
+            },
+        )
+
     def test_profile_lines_keeps_sample_records(self):
         lines = [
             '{"id": 1}',
