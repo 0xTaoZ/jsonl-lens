@@ -271,6 +271,63 @@ class CliTest(unittest.TestCase):
             [{"field": "mfa", "missing": 1, "null": 1}],
         )
 
+    def test_fields_only_prints_one_level_nested_fields(self):
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl") as handle:
+            handle.write('{"event": "request", "http": {"method": "GET", "status": 200}}\n')
+            handle.write('{"event": "request", "http": {"method": "POST"}}\n')
+            handle.write('{"event": "login", "user": {"name": "alice"}}\n')
+            handle.flush()
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "jsonl_lens",
+                    handle.name,
+                    "--fields-only",
+                    "--include-field",
+                    "http.method",
+                ],
+                check=True,
+                capture_output=True,
+                env={"PYTHONPATH": str(PROJECT_ROOT / "src")},
+                text=True,
+            )
+
+        self.assertIn("Nested fields", result.stdout)
+        self.assertIn("- http.method: 2", result.stdout)
+        self.assertNotIn("http.status", result.stdout)
+        self.assertNotIn("user.name", result.stdout)
+
+    def test_json_fields_only_includes_filtered_nested_fields(self):
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl") as handle:
+            handle.write('{"event": "request", "http": {"method": "GET", "status": 200}}\n')
+            handle.write('{"event": "request", "http": {"method": "POST"}}\n')
+            handle.flush()
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "jsonl_lens",
+                    handle.name,
+                    "--json",
+                    "--fields-only",
+                    "--include-field",
+                    "http.status",
+                ],
+                check=True,
+                capture_output=True,
+                env={"PYTHONPATH": str(PROJECT_ROOT / "src")},
+                text=True,
+            )
+
+        payload = json.loads(result.stdout)
+        self.assertEqual(
+            payload["nested_field_counts"],
+            [{"field": "http.status", "count": 1}],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

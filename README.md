@@ -2,7 +2,7 @@
 
 A small Python CLI for inspecting JSON Lines files.
 
-It counts valid and invalid lines, summarizes which fields appear, shows common scalar values, reports missing or null fields, and prints a few sample records. It is meant for quick checks on application logs, exported events, and small data files.
+It counts valid and invalid lines, summarizes which fields appear, shows common scalar values, reports missing or null fields, reports one-level nested object paths, and prints a few sample records. It is meant for quick checks on application logs, exported events, and small data files.
 
 ## Quick start
 
@@ -32,8 +32,10 @@ Fields
 - service: 3
 - message: 3
 - request_id: 2
+- http: 2
 - duration_ms: 1
 - job_id: 1
+- job: 1
 
 Field types
 - timestamp: string=3
@@ -41,8 +43,10 @@ Field types
 - service: string=3
 - message: string=3
 - request_id: string=2
+- http: object=2
 - duration_ms: number=1
 - job_id: string=1
+- job: object=1
 
 Common values
 - timestamp: 2026-07-01T08:00:00Z=1, 2026-07-01T08:00:02Z=1, 2026-07-01T08:00:05Z=1
@@ -55,8 +59,15 @@ Common values
 
 Field gaps
 - request_id: missing=1, null=0
+- http: missing=1, null=0
 - duration_ms: missing=2, null=0
 - job_id: missing=2, null=0
+- job: missing=2, null=0
+
+Nested fields
+- http.method: 2
+- http.status: 2
+- job.attempt: 1
 
 Issues
 - line 4: invalid JSON: Expecting property name enclosed in double quotes
@@ -95,8 +106,8 @@ PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only --includ
 
 ## Why this exists
 
-JSONL is easy to produce, but messy files are common. A small inspection tool is useful before writing a parser, importing data, or sharing a sample bug report. Missing-field counts also help spot optional fields, schema drift, and enrichment steps that only ran for some records.
+JSONL is easy to produce, but messy files are common. A small inspection tool is useful before writing a parser, importing data, or sharing a sample bug report. Missing-field counts and one-level nested paths also help spot optional fields, schema drift, and enrichment steps that only ran for some records.
 
 ## Next ideas
 
-- add nested object field summaries
+- add an option to cap or hide sample records in text output

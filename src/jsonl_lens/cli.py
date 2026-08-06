@@ -110,6 +110,11 @@ def field_summary_to_dict(
         include_fields=include_fields,
         exclude_fields=exclude_fields,
     )
+    nested_field_counts = _filter_nested_field_counts(
+        profile.nested_field_counts,
+        include_fields=include_fields,
+        exclude_fields=exclude_fields,
+    )
     return {
         "field_counts": [
             {"field": field, "count": count}
@@ -138,6 +143,10 @@ def field_summary_to_dict(
         "field_absence_counts": [
             {"field": field, "missing": missing, "null": null}
             for field, missing, null in field_absence_counts
+        ],
+        "nested_field_counts": [
+            {"field": field, "count": count}
+            for field, count in nested_field_counts
         ],
     }
 
@@ -169,6 +178,11 @@ def print_field_report(
         include_fields=include_fields,
         exclude_fields=exclude_fields,
     )
+    nested_field_counts = _filter_nested_field_counts(
+        profile.nested_field_counts,
+        include_fields=include_fields,
+        exclude_fields=exclude_fields,
+    )
 
     if field_counts:
         print("Fields")
@@ -197,6 +211,11 @@ def print_field_report(
         print("\nField gaps")
         for field, missing, null in field_absence_counts:
             print(f"- {field}: missing={missing}, null={null}")
+
+    if nested_field_counts:
+        print("\nNested fields")
+        for field, count in nested_field_counts:
+            print(f"- {field}: {count}")
 
 
 def print_report(
@@ -287,6 +306,18 @@ def _filter_field_absence_counts(
         for field, (missing, null) in field_absence_counts
         if (missing > 0 or null > 0)
         and _field_is_visible(field, include_fields, exclude_fields)
+    ]
+
+
+def _filter_nested_field_counts(
+    nested_field_counts: list[tuple[str, int]],
+    include_fields: list[str] | None = None,
+    exclude_fields: list[str] | None = None,
+) -> list[tuple[str, int]]:
+    return [
+        (field, count)
+        for field, count in nested_field_counts
+        if _field_is_visible(field, include_fields, exclude_fields)
     ]
 
 

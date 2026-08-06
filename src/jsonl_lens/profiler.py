@@ -17,6 +17,7 @@ def profile_lines(lines: list[str], sample_limit: int = 3) -> JsonlProfile:
     samples: list[dict[str, Any]] = []
     valid_records = 0
     field_value_counters: dict[str, Counter[str]] = {}
+    nested_field_counter: Counter[str] = Counter()
 
     for index, line in enumerate(lines, start=1):
         if not line.strip():
@@ -43,6 +44,10 @@ def profile_lines(lines: list[str], sample_limit: int = 3) -> JsonlProfile:
             if scalar_value is not None:
                 field_value_counters.setdefault(field, Counter()).update(
                     [scalar_value]
+                )
+            if isinstance(value, dict):
+                nested_field_counter.update(
+                    f"{field}.{nested_field}" for nested_field in value.keys()
                 )
         if len(samples) < sample_limit:
             samples.append(record)
@@ -75,6 +80,7 @@ def profile_lines(lines: list[str], sample_limit: int = 3) -> JsonlProfile:
         field_type_counts=field_type_counts,
         field_value_counts=field_value_counts,
         field_absence_counts=field_absence_counts,
+        nested_field_counts=nested_field_counter.most_common(),
         warnings=_mixed_type_warnings(field_type_counts),
         issues=issues,
         samples=samples,

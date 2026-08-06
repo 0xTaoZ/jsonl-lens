@@ -77,6 +77,24 @@ class ProfilerTest(unittest.TestCase):
             },
         )
 
+    def test_profile_lines_counts_one_level_nested_object_fields(self):
+        lines = [
+            '{"event": "request", "http": {"method": "GET", "status": 200}}',
+            '{"event": "request", "http": {"method": "POST"}}',
+            '{"event": "login", "user": {"name": "alice"}}',
+        ]
+
+        profile = profile_lines(lines)
+
+        self.assertEqual(
+            dict(profile.nested_field_counts),
+            {
+                "http.method": 2,
+                "http.status": 1,
+                "user.name": 1,
+            },
+        )
+
     def test_profile_lines_keeps_sample_records(self):
         lines = [
             '{"id": 1}',
