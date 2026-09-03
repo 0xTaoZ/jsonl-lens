@@ -203,6 +203,45 @@ class CliTest(unittest.TestCase):
         self.assertNotIn("c=1", result.stdout)
         self.assertIn("- ... 1 more value(s) for id", result.stdout)
 
+    def test_max_samples_limits_text_report_samples(self):
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "jsonl_lens",
+                str(PROJECT_ROOT / "samples" / "events.jsonl"),
+                "--max-samples",
+                "1",
+            ],
+            check=True,
+            capture_output=True,
+            env={"PYTHONPATH": str(PROJECT_ROOT / "src")},
+            text=True,
+        )
+
+        self.assertIn("Samples", result.stdout)
+        self.assertIn('"request_id": "req-001"', result.stdout)
+        self.assertNotIn('"request_id": "req-002"', result.stdout)
+
+    def test_max_samples_zero_hides_text_report_samples(self):
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "jsonl_lens",
+                str(PROJECT_ROOT / "samples" / "events.jsonl"),
+                "--max-samples",
+                "0",
+            ],
+            check=True,
+            capture_output=True,
+            env={"PYTHONPATH": str(PROJECT_ROOT / "src")},
+            text=True,
+        )
+
+        self.assertNotIn("Samples", result.stdout)
+        self.assertNotIn('"request_id": "req-001"', result.stdout)
+
     def test_json_fields_only_honors_field_filters(self):
         result = subprocess.run(
             [

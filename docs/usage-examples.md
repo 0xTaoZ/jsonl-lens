@@ -64,6 +64,13 @@ PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --max-issues 2
 
 Large log exports can contain many malformed lines. Limiting the issue list keeps the report short while still showing examples of the problem.
 
+Sample records can also be limited or hidden when you only need the counts:
+
+```bash
+PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --max-samples 1
+PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --max-samples 0
+```
+
 ## Produce JSON for scripts
 
 ```bash

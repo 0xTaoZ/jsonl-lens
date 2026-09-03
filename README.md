@@ -86,6 +86,13 @@ Large files can produce a noisy issue list. Limit the text report when you only 
 PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --max-issues 2
 ```
 
+Limit or hide sample records when the field summary is enough:
+
+```bash
+PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --max-samples 1
+PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --max-samples 0
+```
+
 For a quick schema check, print only field counts and value types:
 
 ```bash
@@ -110,4 +117,4 @@ JSONL is easy to produce, but messy files are common. A small inspection tool is
 
 ## Next ideas
 
-- add an option to cap or hide sample records in text output
+- add a compact summary for high-cardinality fields

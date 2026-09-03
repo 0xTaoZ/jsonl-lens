@@ -34,6 +34,12 @@ def main() -> None:
         help="Maximum number of common values to print per field",
     )
     parser.add_argument(
+        "--max-samples",
+        type=int,
+        default=3,
+        help="Maximum number of sample records to keep in the report",
+    )
+    parser.add_argument(
         "--include-field",
         action="append",
         default=[],
@@ -50,8 +56,10 @@ def main() -> None:
         parser.error("--max-issues must be 0 or greater")
     if args.max_values < 0:
         parser.error("--max-values must be 0 or greater")
+    if args.max_samples < 0:
+        parser.error("--max-samples must be 0 or greater")
 
-    profile = profile_file(args.path)
+    profile = profile_file(args.path, sample_limit=args.max_samples)
     if args.json and args.fields_only:
         print(
             json.dumps(
