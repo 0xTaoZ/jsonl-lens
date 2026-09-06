@@ -18,6 +18,7 @@ def profile_lines(lines: list[str], sample_limit: int = 3) -> JsonlProfile:
     valid_records = 0
     field_value_counters: dict[str, Counter[str]] = {}
     nested_field_counter: Counter[str] = Counter()
+    record_lengths: list[int] = []
 
     for index, line in enumerate(lines, start=1):
         if not line.strip():
@@ -35,6 +36,7 @@ def profile_lines(lines: list[str], sample_limit: int = 3) -> JsonlProfile:
             continue
 
         valid_records += 1
+        record_lengths.append(len(line))
         field_counter.update(record.keys())
         for field, value in record.items():
             field_type_counters.setdefault(field, Counter()).update(
@@ -81,10 +83,21 @@ def profile_lines(lines: list[str], sample_limit: int = 3) -> JsonlProfile:
         field_value_counts=field_value_counts,
         field_absence_counts=field_absence_counts,
         nested_field_counts=nested_field_counter.most_common(),
+        record_length_summary=_record_length_summary(record_lengths),
         warnings=_mixed_type_warnings(field_type_counts),
         issues=issues,
         samples=samples,
     )
+
+
+def _record_length_summary(record_lengths: list[int]) -> dict[str, float] | None:
+    if not record_lengths:
+        return None
+    return {
+        "min": min(record_lengths),
+        "max": max(record_lengths),
+        "average": sum(record_lengths) / len(record_lengths),
+    }
 
 
 def _mixed_type_warnings(

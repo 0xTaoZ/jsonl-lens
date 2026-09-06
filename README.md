@@ -2,7 +2,7 @@
 
 A small Python CLI for inspecting JSON Lines files.
 
-It counts valid and invalid lines, summarizes which fields appear, shows common scalar values, reports missing or null fields, reports one-level nested object paths, and prints a few sample records. It is meant for quick checks on application logs, exported events, and small data files.
+It counts valid and invalid lines, summarizes which fields appear, shows common scalar values, reports missing or null fields, reports one-level nested object paths, shows a compact record-length summary, and prints a few sample records. It is meant for quick checks on application logs, exported events, and small data files.
 
 ## Quick start
 
@@ -69,6 +69,9 @@ Nested fields
 - http.status: 2
 - job.attempt: 1
 
+Record lengths
+- min=132, max=171, average=152.7 characters
+
 Issues
 - line 4: invalid JSON: Expecting property name enclosed in double quotes
 - line 5: record is not a JSON object
@@ -113,7 +116,7 @@ PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only --includ
 
 ## Why this exists
 
-JSONL is easy to produce, but messy files are common. A small inspection tool is useful before writing a parser, importing data, or sharing a sample bug report. Missing-field counts and one-level nested paths also help spot optional fields, schema drift, and enrichment steps that only ran for some records.
+JSONL is easy to produce, but messy files are common. A small inspection tool is useful before writing a parser, importing data, or sharing a sample bug report. Missing-field counts, one-level nested paths, and record lengths also help spot optional fields, schema drift, enrichment steps that only ran for some records, and unusually large log events.
 
 ## Next ideas
 

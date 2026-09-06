@@ -8,7 +8,7 @@ These examples use the bundled sample file, but the same commands work with smal
 PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl
 ```
 
-Use this when you want a quick human-readable report with record counts, field frequency, value types, missing or null fields, one-level nested object paths, parse issues, and a few sample records.
+Use this when you want a quick human-readable report with record counts, field frequency, value types, missing or null fields, one-level nested object paths, record lengths, parse issues, and a few sample records.
 
 ## Check a schema quickly
 
@@ -55,6 +55,10 @@ PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only --includ
 ```
 
 The `Nested fields` section shows one-level object paths such as `http.method` and `http.status`. This is useful when exported logs put request, identity, or cloud event details inside nested objects.
+
+## Check record size drift
+
+The `Record lengths` section shows the shortest, longest, and average source-line length for valid JSON object records. This is a quick way to spot unusually large log events before writing a parser or loading the file into another tool.
 
 ## Keep noisy files readable
 

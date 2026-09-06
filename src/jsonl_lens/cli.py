@@ -252,6 +252,17 @@ def print_report(
         for warning in profile.warnings:
             print(f"- {warning.field}: {warning.message}")
 
+    if profile.record_length_summary:
+        summary = profile.record_length_summary
+        print("\nRecord lengths")
+        print(
+            "- min={min}, max={max}, average={average:.1f} characters".format(
+                min=int(summary["min"]),
+                max=int(summary["max"]),
+                average=summary["average"],
+            )
+        )
+
     if profile.issues:
         print("\nIssues")
         visible_issues = profile.issues[:max_issues]

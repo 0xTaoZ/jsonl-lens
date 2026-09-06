@@ -36,6 +36,7 @@ class JsonlProfile:
     field_value_counts: list[tuple[str, list[tuple[str, int]]]]
     field_absence_counts: list[tuple[str, tuple[int, int]]]
     nested_field_counts: list[tuple[str, int]]
+    record_length_summary: dict[str, float] | None
     warnings: list[JsonlWarning]
     issues: list[JsonlIssue]
     samples: list[dict[str, Any]]
@@ -77,6 +78,7 @@ class JsonlProfile:
                 {"field": field, "count": count}
                 for field, count in self.nested_field_counts
             ],
+            "record_length_summary": self.record_length_summary,
             "warnings": [warning.to_dict() for warning in self.warnings],
             "issues": [issue.to_dict() for issue in self.issues],
             "samples": self.samples,

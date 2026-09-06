@@ -51,6 +51,31 @@ class CliTest(unittest.TestCase):
         self.assertIn("Warnings", result.stdout)
         self.assertIn("- id: mixed value types: number=1, string=1", result.stdout)
 
+    def test_text_report_shows_valid_record_lengths(self):
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl") as handle:
+            handle.write('{"id":1}\n')
+            handle.write('{"id":2,"message":"longer"}\n')
+            handle.write("{bad json\n")
+            handle.flush()
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "jsonl_lens",
+                    handle.name,
+                    "--max-samples",
+                    "0",
+                ],
+                check=True,
+                capture_output=True,
+                env={"PYTHONPATH": str(PROJECT_ROOT / "src")},
+                text=True,
+            )
+
+        self.assertIn("Record lengths", result.stdout)
+        self.assertIn("- min=8, max=27, average=17.5 characters", result.stdout)
+
     def test_max_issues_limits_text_report_noise(self):
         with tempfile.NamedTemporaryFile("w", suffix=".jsonl") as handle:
             handle.write("{bad one\n")

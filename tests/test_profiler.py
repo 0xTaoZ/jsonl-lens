@@ -95,6 +95,25 @@ class ProfilerTest(unittest.TestCase):
             },
         )
 
+    def test_profile_lines_summarizes_valid_record_lengths(self):
+        lines = [
+            '{"id":1}',
+            '{"id":2,"message":"longer"}',
+            "{bad json",
+            '["not", "object"]',
+        ]
+
+        profile = profile_lines(lines)
+
+        self.assertEqual(
+            profile.record_length_summary,
+            {
+                "min": len(lines[0]),
+                "max": len(lines[1]),
+                "average": (len(lines[0]) + len(lines[1])) / 2,
+            },
+        )
+
     def test_profile_lines_keeps_sample_records(self):
         lines = [
             '{"id": 1}',
