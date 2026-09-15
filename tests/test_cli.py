@@ -171,6 +171,32 @@ class CliTest(unittest.TestCase):
         self.assertIn("- level: info=1, warn=1, error=1", result.stdout)
         self.assertNotIn("service:", result.stdout)
 
+    def test_fields_only_prints_high_cardinality_fields(self):
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl") as handle:
+            handle.write('{"request_id": "req-001", "level": "info"}\n')
+            handle.write('{"request_id": "req-002", "level": "info"}\n')
+            handle.write('{"request_id": "req-003", "level": "error"}\n')
+            handle.write('{"request_id": "req-004", "level": "info"}\n')
+            handle.flush()
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "jsonl_lens",
+                    handle.name,
+                    "--fields-only",
+                ],
+                check=True,
+                capture_output=True,
+                env={"PYTHONPATH": str(PROJECT_ROOT / "src")},
+                text=True,
+            )
+
+        self.assertIn("High-cardinality fields", result.stdout)
+        self.assertIn("- request_id: 4 distinct values across 4 records", result.stdout)
+        self.assertNotIn("- level: 2 distinct values", result.stdout)
+
     def test_fields_only_prints_missing_and_null_counts(self):
         with tempfile.NamedTemporaryFile("w", suffix=".jsonl") as handle:
             handle.write('{"user": "alice", "mfa": true, "src_ip": "198.51.100.10"}\n')

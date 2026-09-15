@@ -2,7 +2,7 @@
 
 A small Python CLI for inspecting JSON Lines files.
 
-It counts valid and invalid lines, summarizes which fields appear, shows common scalar values, reports missing or null fields, reports one-level nested object paths, shows a compact record-length summary, and prints a few sample records. It is meant for quick checks on application logs, exported events, and small data files.
+It counts valid and invalid lines, summarizes which fields appear, shows common scalar values, reports missing or null fields, reports one-level nested object paths, flags high-cardinality scalar fields, shows a compact record-length summary, and prints a few sample records. It is meant for quick checks on application logs, exported events, and small data files.
 
 ## Quick start
 
@@ -114,10 +114,12 @@ Limit common-value output when a field has many distinct values:
 PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only --include-field level --max-values 2
 ```
 
+The `High-cardinality fields` section flags scalar fields where most values are distinct. That helps spot noisy IDs, request IDs, or trace IDs before treating them as useful grouping fields.
+
 ## Why this exists
 
-JSONL is easy to produce, but messy files are common. A small inspection tool is useful before writing a parser, importing data, or sharing a sample bug report. Missing-field counts, one-level nested paths, and record lengths also help spot optional fields, schema drift, enrichment steps that only ran for some records, and unusually large log events.
+JSONL is easy to produce, but messy files are common. A small inspection tool is useful before writing a parser, importing data, or sharing a sample bug report. Missing-field counts, one-level nested paths, high-cardinality fields, and record lengths also help spot optional fields, schema drift, noisy identifiers, enrichment steps that only ran for some records, and unusually large log events.
 
 ## Next ideas
 
-- add a compact summary for high-cardinality fields
+- add an option to hide high-cardinality fields from common-value output

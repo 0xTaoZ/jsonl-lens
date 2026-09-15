@@ -83,10 +83,26 @@ def profile_lines(lines: list[str], sample_limit: int = 3) -> JsonlProfile:
         field_value_counts=field_value_counts,
         field_absence_counts=field_absence_counts,
         nested_field_counts=nested_field_counter.most_common(),
+        high_cardinality_fields=_high_cardinality_fields(field_value_counters),
         record_length_summary=_record_length_summary(record_lengths),
         warnings=_mixed_type_warnings(field_type_counts),
         issues=issues,
         samples=samples,
+    )
+
+
+def _high_cardinality_fields(
+    field_value_counters: dict[str, Counter[str]],
+) -> list[tuple[str, int, int]]:
+    high_cardinality_fields: list[tuple[str, int, int]] = []
+    for field, value_counter in field_value_counters.items():
+        scalar_records = value_counter.total()
+        distinct_values = len(value_counter)
+        if scalar_records >= 4 and distinct_values / scalar_records >= 0.8:
+            high_cardinality_fields.append((field, distinct_values, scalar_records))
+    return sorted(
+        high_cardinality_fields,
+        key=lambda item: (-item[1], item[0]),
     )
 
 

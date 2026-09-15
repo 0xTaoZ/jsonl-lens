@@ -8,7 +8,7 @@ These examples use the bundled sample file, but the same commands work with smal
 PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl
 ```
 
-Use this when you want a quick human-readable report with record counts, field frequency, value types, missing or null fields, one-level nested object paths, record lengths, parse issues, and a few sample records.
+Use this when you want a quick human-readable report with record counts, field frequency, value types, missing or null fields, one-level nested object paths, high-cardinality scalar fields, record lengths, parse issues, and a few sample records.
 
 ## Check a schema quickly
 
@@ -16,7 +16,7 @@ Use this when you want a quick human-readable report with record counts, field f
 PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only
 ```
 
-This is useful before writing a parser or loading a file into another tool. The output stays focused on field names, how often they appear, the value types seen for each field, nested object paths, and fields that are missing or null in some records.
+This is useful before writing a parser or loading a file into another tool. The output stays focused on field names, how often they appear, the value types seen for each field, nested object paths, high-cardinality scalar fields, and fields that are missing or null in some records.
 
 ## Focus on selected fields
 
@@ -39,6 +39,8 @@ Use `--max-values <count>` to keep high-cardinality fields readable:
 ```bash
 PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only --include-field level --max-values 2
 ```
+
+Fields with at least four scalar values and mostly distinct values are also listed under `High-cardinality fields`. Use that section to notice IDs or trace fields that may be noisy grouping keys.
 
 ## Find sparse fields
 

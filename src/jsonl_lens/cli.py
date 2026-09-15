@@ -123,6 +123,11 @@ def field_summary_to_dict(
         include_fields=include_fields,
         exclude_fields=exclude_fields,
     )
+    high_cardinality_fields = _filter_high_cardinality_fields(
+        profile.high_cardinality_fields,
+        include_fields=include_fields,
+        exclude_fields=exclude_fields,
+    )
     return {
         "field_counts": [
             {"field": field, "count": count}
@@ -155,6 +160,14 @@ def field_summary_to_dict(
         "nested_field_counts": [
             {"field": field, "count": count}
             for field, count in nested_field_counts
+        ],
+        "high_cardinality_fields": [
+            {
+                "field": field,
+                "distinct_values": distinct_values,
+                "records": records,
+            }
+            for field, distinct_values, records in high_cardinality_fields
         ],
     }
 
@@ -191,6 +204,11 @@ def print_field_report(
         include_fields=include_fields,
         exclude_fields=exclude_fields,
     )
+    high_cardinality_fields = _filter_high_cardinality_fields(
+        profile.high_cardinality_fields,
+        include_fields=include_fields,
+        exclude_fields=exclude_fields,
+    )
 
     if field_counts:
         print("Fields")
@@ -224,6 +242,13 @@ def print_field_report(
         print("\nNested fields")
         for field, count in nested_field_counts:
             print(f"- {field}: {count}")
+
+    if high_cardinality_fields:
+        print("\nHigh-cardinality fields")
+        for field, distinct_values, records in high_cardinality_fields:
+            print(
+                f"- {field}: {distinct_values} distinct values across {records} records"
+            )
 
 
 def print_report(
@@ -336,6 +361,18 @@ def _filter_nested_field_counts(
     return [
         (field, count)
         for field, count in nested_field_counts
+        if _field_is_visible(field, include_fields, exclude_fields)
+    ]
+
+
+def _filter_high_cardinality_fields(
+    high_cardinality_fields: list[tuple[str, int, int]],
+    include_fields: list[str] | None = None,
+    exclude_fields: list[str] | None = None,
+) -> list[tuple[str, int, int]]:
+    return [
+        (field, distinct_values, records)
+        for field, distinct_values, records in high_cardinality_fields
         if _field_is_visible(field, include_fields, exclude_fields)
     ]
 

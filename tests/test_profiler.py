@@ -114,6 +114,18 @@ class ProfilerTest(unittest.TestCase):
             },
         )
 
+    def test_profile_lines_reports_high_cardinality_scalar_fields(self):
+        lines = [
+            '{"request_id": "req-001", "level": "info"}',
+            '{"request_id": "req-002", "level": "info"}',
+            '{"request_id": "req-003", "level": "error"}',
+            '{"request_id": "req-004", "level": "info"}',
+        ]
+
+        profile = profile_lines(lines)
+
+        self.assertEqual(profile.high_cardinality_fields, [("request_id", 4, 4)])
+
     def test_profile_lines_keeps_sample_records(self):
         lines = [
             '{"id": 1}',
