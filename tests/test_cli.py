@@ -197,6 +197,81 @@ class CliTest(unittest.TestCase):
         self.assertIn("- request_id: 4 distinct values across 4 records", result.stdout)
         self.assertNotIn("- level: 2 distinct values", result.stdout)
 
+    def test_fields_only_can_hide_high_cardinality_common_values(self):
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl") as handle:
+            handle.write('{"request_id": "req-001", "level": "info"}\n')
+            handle.write('{"request_id": "req-002", "level": "info"}\n')
+            handle.write('{"request_id": "req-003", "level": "error"}\n')
+            handle.write('{"request_id": "req-004", "level": "info"}\n')
+            handle.flush()
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "jsonl_lens",
+                    handle.name,
+                    "--fields-only",
+                    "--hide-high-cardinality-values",
+                ],
+                capture_output=True,
+                env={"PYTHONPATH": str(PROJECT_ROOT / "src")},
+                text=True,
+            )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("- level: info=3, error=1", result.stdout)
+        self.assertNotIn("- request_id: req-001=1", result.stdout)
+        self.assertIn("- request_id: 4 distinct values across 4 records", result.stdout)
+
+    def test_json_fields_only_can_hide_high_cardinality_common_values(self):
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl") as handle:
+            handle.write('{"request_id": "req-001", "level": "info"}\n')
+            handle.write('{"request_id": "req-002", "level": "info"}\n')
+            handle.write('{"request_id": "req-003", "level": "error"}\n')
+            handle.write('{"request_id": "req-004", "level": "info"}\n')
+            handle.flush()
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "jsonl_lens",
+                    handle.name,
+                    "--json",
+                    "--fields-only",
+                    "--hide-high-cardinality-values",
+                ],
+                capture_output=True,
+                env={"PYTHONPATH": str(PROJECT_ROOT / "src")},
+                text=True,
+            )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(
+            payload["field_value_counts"],
+            [
+                {
+                    "field": "level",
+                    "values": [
+                        {"value": "info", "count": 3},
+                        {"value": "error", "count": 1},
+                    ],
+                }
+            ],
+        )
+        self.assertEqual(
+            payload["high_cardinality_fields"],
+            [
+                {
+                    "field": "request_id",
+                    "distinct_values": 4,
+                    "records": 4,
+                }
+            ],
+        )
+
     def test_fields_only_prints_missing_and_null_counts(self):
         with tempfile.NamedTemporaryFile("w", suffix=".jsonl") as handle:
             handle.write('{"user": "alice", "mfa": true, "src_ip": "198.51.100.10"}\n')

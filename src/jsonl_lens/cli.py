@@ -34,6 +34,11 @@ def main() -> None:
         help="Maximum number of common values to print per field",
     )
     parser.add_argument(
+        "--hide-high-cardinality-values",
+        action="store_true",
+        help="Hide high-cardinality fields from common-value summaries",
+    )
+    parser.add_argument(
         "--max-samples",
         type=int,
         default=3,
@@ -68,6 +73,7 @@ def main() -> None:
                     include_fields=args.include_field,
                     exclude_fields=args.exclude_field,
                     max_values=args.max_values,
+                    hide_high_cardinality_values=args.hide_high_cardinality_values,
                 ),
                 indent=2,
             )
@@ -80,6 +86,7 @@ def main() -> None:
             include_fields=args.include_field,
             exclude_fields=args.exclude_field,
             max_values=args.max_values,
+            hide_high_cardinality_values=args.hide_high_cardinality_values,
         )
     else:
         print_report(
@@ -88,6 +95,7 @@ def main() -> None:
             max_values=args.max_values,
             include_fields=args.include_field,
             exclude_fields=args.exclude_field,
+            hide_high_cardinality_values=args.hide_high_cardinality_values,
         )
 
 
@@ -96,6 +104,7 @@ def field_summary_to_dict(
     include_fields: list[str] | None = None,
     exclude_fields: list[str] | None = None,
     max_values: int = 5,
+    hide_high_cardinality_values: bool = False,
 ) -> dict[str, object]:
     field_counts = _filter_field_counts(
         profile.field_counts,
@@ -112,6 +121,11 @@ def field_summary_to_dict(
         include_fields=include_fields,
         exclude_fields=exclude_fields,
         max_values=max_values,
+        hidden_fields={
+            field for field, _distinct_values, _records in profile.high_cardinality_fields
+        }
+        if hide_high_cardinality_values
+        else None,
     )
     field_absence_counts = _filter_field_absence_counts(
         profile.field_absence_counts,
@@ -177,6 +191,7 @@ def print_field_report(
     include_fields: list[str] | None = None,
     exclude_fields: list[str] | None = None,
     max_values: int = 5,
+    hide_high_cardinality_values: bool = False,
 ) -> None:
     field_counts = _filter_field_counts(
         profile.field_counts,
@@ -193,6 +208,11 @@ def print_field_report(
         include_fields=include_fields,
         exclude_fields=exclude_fields,
         max_values=max_values,
+        hidden_fields={
+            field for field, _distinct_values, _records in profile.high_cardinality_fields
+        }
+        if hide_high_cardinality_values
+        else None,
     )
     field_absence_counts = _filter_field_absence_counts(
         profile.field_absence_counts,
@@ -257,6 +277,7 @@ def print_report(
     max_values: int = 5,
     include_fields: list[str] | None = None,
     exclude_fields: list[str] | None = None,
+    hide_high_cardinality_values: bool = False,
 ) -> None:
     print("jsonl-lens")
     print(f"Total lines: {profile.total_lines}")
@@ -270,6 +291,7 @@ def print_report(
             include_fields=include_fields,
             exclude_fields=exclude_fields,
             max_values=max_values,
+            hide_high_cardinality_values=hide_high_cardinality_values,
         )
 
     if profile.warnings:
@@ -332,11 +354,14 @@ def _filter_field_value_counts(
     include_fields: list[str] | None = None,
     exclude_fields: list[str] | None = None,
     max_values: int = 5,
+    hidden_fields: set[str] | None = None,
 ) -> list[tuple[str, list[tuple[str, int]], int]]:
+    hidden_fields = hidden_fields or set()
     return [
         (field, value_counts[:max_values], max(len(value_counts) - max_values, 0))
         for field, value_counts in field_value_counts
         if _field_is_visible(field, include_fields, exclude_fields)
+        and field not in hidden_fields
     ]
 
 

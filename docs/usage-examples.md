@@ -42,6 +42,12 @@ PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only --includ
 
 Fields with at least four scalar values and mostly distinct values are also listed under `High-cardinality fields`. Use that section to notice IDs or trace fields that may be noisy grouping keys.
 
+Hide those noisy fields from `Common values` while keeping them listed as high-cardinality:
+
+```bash
+PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only --hide-high-cardinality-values
+```
+
 ## Find sparse fields
 
 ```bash

@@ -114,7 +114,11 @@ Limit common-value output when a field has many distinct values:
 PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only --include-field level --max-values 2
 ```
 
-The `High-cardinality fields` section flags scalar fields where most values are distinct. That helps spot noisy IDs, request IDs, or trace IDs before treating them as useful grouping fields.
+The `High-cardinality fields` section flags scalar fields where most values are distinct. That helps spot noisy IDs, request IDs, or trace IDs before treating them as useful grouping fields. Hide those fields from the common-value section while keeping the warning visible:
+
+```bash
+PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only --hide-high-cardinality-values
+```
 
 ## Why this exists
 
@@ -122,4 +126,4 @@ JSONL is easy to produce, but messy files are common. A small inspection tool is
 
 ## Next ideas
 
-- add an option to hide high-cardinality fields from common-value output
+- allow the high-cardinality threshold to be adjusted
