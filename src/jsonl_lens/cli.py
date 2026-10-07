@@ -34,6 +34,12 @@ def main() -> None:
         help="Maximum number of common values to print per field",
     )
     parser.add_argument(
+        "--high-cardinality-threshold",
+        type=float,
+        default=0.8,
+        help="Minimum distinct-value ratio for high-cardinality fields (default: 0.8)",
+    )
+    parser.add_argument(
         "--hide-high-cardinality-values",
         action="store_true",
         help="Hide high-cardinality fields from common-value summaries",
@@ -64,7 +70,14 @@ def main() -> None:
     if args.max_samples < 0:
         parser.error("--max-samples must be 0 or greater")
 
-    profile = profile_file(args.path, sample_limit=args.max_samples)
+    if not 0 < args.high_cardinality_threshold <= 1:
+        parser.error("--high-cardinality-threshold must be greater than 0 and at most 1")
+
+    profile = profile_file(
+        args.path,
+        sample_limit=args.max_samples,
+        high_cardinality_threshold=args.high_cardinality_threshold,
+    )
     if args.json and args.fields_only:
         print(
             json.dumps(

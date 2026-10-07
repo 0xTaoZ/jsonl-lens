@@ -126,6 +126,28 @@ class ProfilerTest(unittest.TestCase):
 
         self.assertEqual(profile.high_cardinality_fields, [("request_id", 4, 4)])
 
+    def test_high_cardinality_threshold_controls_ratio_and_keeps_minimum(self):
+        lines = ['{"id": 1}', '{"id": 2}', '{"id": 3}', '{"id": 3}']
+        self.assertEqual(profile_lines(lines).high_cardinality_fields, [])
+        self.assertEqual(
+            profile_lines(lines, high_cardinality_threshold=0.75).high_cardinality_fields,
+            [("id", 3, 4)],
+        )
+        self.assertEqual(
+            profile_lines(lines, high_cardinality_threshold=1).high_cardinality_fields,
+            [],
+        )
+        self.assertEqual(
+            profile_lines(lines[:3], high_cardinality_threshold=0.5).high_cardinality_fields,
+            [],
+        )
+
+    def test_high_cardinality_threshold_rejects_invalid_ratios(self):
+        for threshold in (0, -0.1, 1.1, float("nan"), float("inf")):
+            with self.subTest(threshold=threshold):
+                with self.assertRaises(ValueError):
+                    profile_lines([], high_cardinality_threshold=threshold)
+
     def test_profile_lines_keeps_sample_records(self):
         lines = [
             '{"id": 1}',

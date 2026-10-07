@@ -120,10 +120,14 @@ The `High-cardinality fields` section flags scalar fields where most values are 
 PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only --hide-high-cardinality-values
 ```
 
+Adjust the distinct-value ratio when reviewing fields with more repetition:
+
+```bash
+PYTHONPATH=src python3 -m jsonl_lens samples/cardinality.jsonl --fields-only --high-cardinality-threshold 0.75 --hide-high-cardinality-values
+```
+
+The threshold must be greater than zero and at most one (default: `0.8`). A field still needs at least four scalar values. The selected threshold applies to text and JSON reports and to common-value hiding.
+
 ## Why this exists
 
 JSONL is easy to produce, but messy files are common. A small inspection tool is useful before writing a parser, importing data, or sharing a sample bug report. Missing-field counts, one-level nested paths, high-cardinality fields, and record lengths also help spot optional fields, schema drift, noisy identifiers, enrichment steps that only ran for some records, and unusually large log events.
-
-## Next ideas
-
-- allow the high-cardinality threshold to be adjusted

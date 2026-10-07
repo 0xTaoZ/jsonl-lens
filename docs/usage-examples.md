@@ -48,6 +48,14 @@ Hide those noisy fields from `Common values` while keeping them listed as high-c
 PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only --hide-high-cardinality-values
 ```
 
+Use `--high-cardinality-threshold 0.75` to flag fields with at least 75% distinct scalar values. The default is `0.8`; the minimum sample remains four scalar values. Ratios must be greater than zero and at most one.
+
+```bash
+PYTHONPATH=src python3 -m jsonl_lens samples/cardinality.jsonl --json --fields-only --high-cardinality-threshold 0.75 --hide-high-cardinality-values
+```
+
+In this sample, `request_id` has three distinct values across four records. It is flagged at `0.75`, but not at the default `0.8`. The `level` field stays visible in common values. Full JSON reports retain raw common-value counts; `--hide-high-cardinality-values` filters text and fields-only JSON summaries.
+
 ## Find sparse fields
 
 ```bash

@@ -10,6 +10,44 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 class CliTest(unittest.TestCase):
+    def test_custom_threshold_applies_to_text_json_and_value_hiding(self):
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl") as handle:
+            handle.write('{"id": 1}\n{"id": 2}\n{"id": 3}\n{"id": 3}\n')
+            handle.flush()
+            for mode in ([], ["--fields-only"], ["--json"], ["--json", "--fields-only"]):
+                with self.subTest(mode=mode):
+                    result = subprocess.run(
+                        [sys.executable, "-m", "jsonl_lens", handle.name,
+                         "--high-cardinality-threshold", "0.75", *mode,
+                         "--hide-high-cardinality-values"],
+                        capture_output=True, text=True,
+                        env={"PYTHONPATH": str(PROJECT_ROOT / "src")},
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    if "--json" in mode:
+                        payload = json.loads(result.stdout)
+                        self.assertEqual(payload["high_cardinality_fields"], [
+                            {"field": "id", "distinct_values": 3, "records": 4}
+                        ])
+                        if "--fields-only" in mode:
+                            self.assertEqual(payload["field_value_counts"], [])
+                    else:
+                        self.assertIn("- id: 3 distinct values across 4 records", result.stdout)
+                        self.assertNotIn("3=2", result.stdout)
+
+    def test_cli_rejects_invalid_high_cardinality_thresholds(self):
+        for threshold in ("0", "-0.1", "1.1", "nan", "inf", "abc"):
+            with self.subTest(threshold=threshold):
+                result = subprocess.run(
+                    [sys.executable, "-m", "jsonl_lens", "missing.jsonl",
+                     "--high-cardinality-threshold", threshold],
+                    capture_output=True, text=True,
+                    env={"PYTHONPATH": str(PROJECT_ROOT / "src")},
+                )
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("--high-cardinality-threshold", result.stderr)
+                self.assertNotIn("Traceback", result.stderr)
+
     def test_sample_report_runs(self):
         result = subprocess.run(
             [

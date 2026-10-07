@@ -6,11 +6,21 @@ from typing import Any
 from .models import JsonlIssue, JsonlProfile, JsonlWarning
 
 
-def profile_file(path: str | Path, sample_limit: int = 3) -> JsonlProfile:
-    return profile_lines(Path(path).read_text(encoding="utf-8").splitlines(), sample_limit)
+def profile_file(
+    path: str | Path, sample_limit: int = 3, high_cardinality_threshold: float = 0.8,
+) -> JsonlProfile:
+    return profile_lines(
+        Path(path).read_text(encoding="utf-8").splitlines(),
+        sample_limit,
+        high_cardinality_threshold,
+    )
 
 
-def profile_lines(lines: list[str], sample_limit: int = 3) -> JsonlProfile:
+def profile_lines(
+    lines: list[str], sample_limit: int = 3, high_cardinality_threshold: float = 0.8,
+) -> JsonlProfile:
+    if not 0 < high_cardinality_threshold <= 1:
+        raise ValueError("high_cardinality_threshold must be greater than 0 and at most 1")
     field_counter: Counter[str] = Counter()
     field_type_counters: dict[str, Counter[str]] = {}
     issues: list[JsonlIssue] = []
@@ -83,7 +93,9 @@ def profile_lines(lines: list[str], sample_limit: int = 3) -> JsonlProfile:
         field_value_counts=field_value_counts,
         field_absence_counts=field_absence_counts,
         nested_field_counts=nested_field_counter.most_common(),
-        high_cardinality_fields=_high_cardinality_fields(field_value_counters),
+        high_cardinality_fields=_high_cardinality_fields(
+            field_value_counters, high_cardinality_threshold,
+        ),
         record_length_summary=_record_length_summary(record_lengths),
         warnings=_mixed_type_warnings(field_type_counts),
         issues=issues,
@@ -93,12 +105,13 @@ def profile_lines(lines: list[str], sample_limit: int = 3) -> JsonlProfile:
 
 def _high_cardinality_fields(
     field_value_counters: dict[str, Counter[str]],
+    threshold: float,
 ) -> list[tuple[str, int, int]]:
     high_cardinality_fields: list[tuple[str, int, int]] = []
     for field, value_counter in field_value_counters.items():
         scalar_records = value_counter.total()
         distinct_values = len(value_counter)
-        if scalar_records >= 4 and distinct_values / scalar_records >= 0.8:
+        if scalar_records >= 4 and distinct_values / scalar_records >= threshold:
             high_cardinality_fields.append((field, distinct_values, scalar_records))
     return sorted(
         high_cardinality_fields,
