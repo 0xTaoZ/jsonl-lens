@@ -168,5 +168,11 @@ def _json_scalar_value(value: Any) -> str | None:
     if isinstance(value, (dict, list)):
         return None
     if isinstance(value, str):
-        return value
+        # Keep plain strings readable, but quote any string that is itself
+        # valid JSON so "1", "true" and "null" do not merge with 1, true, null.
+        try:
+            json.loads(value)
+        except ValueError:
+            return value
+        return json.dumps(value)
     return json.dumps(value)

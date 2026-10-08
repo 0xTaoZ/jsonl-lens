@@ -148,6 +148,26 @@ class ProfilerTest(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     profile_lines([], high_cardinality_threshold=threshold)
 
+    def test_common_values_keep_strings_apart_from_json_literals(self):
+        lines = [
+            '{"code": 1, "flag": true, "owner": null}',
+            '{"code": "1", "flag": "true", "owner": "null"}',
+            '{"code": "\\"1\\"", "flag": "yes", "owner": "ops"}',
+        ]
+
+        profile = profile_lines(lines)
+        values = dict(profile.field_value_counts)
+
+        self.assertCountEqual(
+            values["code"], [("1", 1), ('"1"', 1), ('"\\"1\\""', 1)]
+        )
+        self.assertCountEqual(
+            values["flag"], [("true", 1), ('"true"', 1), ("yes", 1)]
+        )
+        self.assertCountEqual(
+            values["owner"], [("null", 1), ('"null"', 1), ("ops", 1)]
+        )
+
     def test_profile_lines_keeps_sample_records(self):
         lines = [
             '{"id": 1}',

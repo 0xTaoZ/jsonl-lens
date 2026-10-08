@@ -34,6 +34,8 @@ PYTHONPATH=src python3 -m jsonl_lens samples/events.jsonl --fields-only --includ
 
 This shows the most common scalar values for selected fields. It is useful for quick checks such as which log levels appear, which service produced most records, or whether a status field contains unexpected values.
 
+Strings that are themselves valid JSON are shown quoted, so a producer that writes `"status": "200"` in some records and `"status": 200` in others shows two values, `"200"` and `200`, instead of one merged count.
+
 Use `--max-values <count>` to keep high-cardinality fields readable:
 
 ```bash
